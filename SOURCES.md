@@ -2,22 +2,32 @@
 
 ## Browser runtime
 
-- Upstream: <https://github.com/lazarv/wolf3d>
-- Description: HTML5/JavaScript Wolfenstein 3D browser port.
-- Local status: substantially adapted for same-origin binary data loading,
-  Wolfenstein/Spear profiles, audio, mobile controls, saves, and portal framing.
-- License artifact: the migrated runtime contained `runtime/LICENSE`, a copy of
-  GPL-3.0. Confirm its applicability and preserve all required corresponding
-  source/notices before public distribution.
+- Upstream: <https://github.com/dibdot/uWolf>
+- Audited upstream commit: `80571bbde9897881ca2d9ecaf30e81cb308f37bb`
+- Upstream author: Dirk Brenken, with Claude Opus 4.8 credited by upstream.
+- Description: dependency-free JavaScript raycaster that reads user-supplied
+  Wolfenstein 3D and Spear of Destiny data files directly.
+- License: GNU General Public License version 3. The root `LICENSE` and
+  `runtime/LICENSE` are byte-identical copies of uWolf's license file.
+- Local status: nine of twelve JavaScript modules, both favicons, and the
+  license matched the audited upstream commit byte-for-byte. `runtime/js/game.js`,
+  `runtime/js/main.js`, `runtime/js/variants.js`, `runtime/css/style.css`, and
+  `runtime/index.html` contain the portal, Spear, mobile, save, viewport, and
+  presentation adaptations maintained by this project.
 
-## Original engine source reference
+## Upstream implementation references
 
-- id Software Wolfenstein 3D source: <https://github.com/id-Software/wolf3d>
+- uWolf documents its behavior and data-format implementation as ported and
+  verified against GPL-licensed Wolf4SDL:
+  <https://github.com/fabiangreffrath/wolf4sdl>
+- The explicitly GPL-released id Software browser source is available at:
+  <https://github.com/id-Software/wolf3d-browser>
 
 ## Portal integration
 
 - `integration/future-wolf3d-crt.js` was developed as part of the Scene Access
-  Gateway portal work and is maintained here as the extension controller.
+  Gateway portal work and is maintained here as the extension controller under
+  GPL-3.0 with the rest of this repository.
 
 ## Excluded content
 

@@ -48,10 +48,16 @@ installed.
 ## Source and rights boundary
 
 The browser runtime was adapted from
-[`lazarv/wolf3d`](https://github.com/lazarv/wolf3d). The upstream project
-publishes source while deliberately excluding Wolfenstein/Spear maps, artwork,
-audio, and other commercial data. The original id Software source release is
-available separately at [`id-Software/wolf3d`](https://github.com/id-Software/wolf3d).
+[`dibdot/uWolf`](https://github.com/dibdot/uWolf), an original browser
+raycaster released under GPL-3.0. The local runtime was audited against
+upstream commit `80571bbde9897881ca2d9ecaf30e81cb308f37bb`: nine of its twelve
+JavaScript modules, both favicons, and the GPL license remain byte-identical;
+the other runtime files contain the Scene Access Gateway adaptations.
+
+This repository is distributed under GPL-3.0. See [`LICENSE`](LICENSE),
+[`NOTICE.md`](NOTICE.md), and [`SOURCES.md`](SOURCES.md) for the license,
+authorship, modification, and source record. The upstream project excludes
+Wolfenstein/Spear game content and so do we.
 
 See [`SOURCES.md`](SOURCES.md) and [`docs/PUBLISHING-REVIEW.md`](docs/PUBLISHING-REVIEW.md)
 before making this repository public. Wolfenstein 3D, Spear of Destiny, id
