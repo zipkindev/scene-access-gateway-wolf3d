@@ -10,6 +10,7 @@ node --check "$repository_root/scripts/game-data.mjs"
 sh -n "$repository_root"/scripts/*.sh
 node -e "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8'))" \
   "$repository_root/manifests/supported-data.json"
+node --test "$repository_root"/test/*.test.js
 
 if ! cmp -s "$repository_root/LICENSE" "$repository_root/runtime/LICENSE"; then
   echo "root and runtime GPL-3.0 license files differ" >&2

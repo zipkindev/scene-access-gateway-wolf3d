@@ -8,7 +8,7 @@
 	<title>uWolf</title>
 	<link rel="icon" href="/wolf3d/favicon.ico" sizes="any">
 	<link rel="icon" href="/wolf3d/favicon.svg" type="image/svg+xml">
-	<link rel="stylesheet" href="/wolf3d/css/style.css?v=crt-compact-overlay-11">
+	<link rel="stylesheet" href="/wolf3d/css/style.css?v=menu-guard-65">
 </head>
 
 <body>
@@ -115,9 +115,15 @@
 
 			<p id="status" class="status"></p>
 
+			<section id="wolfScores" class="wolf-scores hidden" aria-live="polite">
+				<strong id="wolfScoreTitle">TOP 10</strong>
+				<ol id="wolfScoreList"></ol>
+				<p><span class="run-unassisted">U</span> unassisted · <span class="run-assisted">A</span> assisted · ★ campaign complete</p>
+			</section>
+
 			<details class="controls">
 				<summary>Controls</summary>
-				<p><strong>Move:</strong> W/A/S/D, turn ←/→. <strong>Fire:</strong> Ctrl. <strong>Weapons:</strong> 1–4.
+				<p><strong>Move:</strong> W/A/S/D, turn ←/→. <strong>Attack:</strong> Shift. <strong>Weapons:</strong> 1–4.
 					<strong>Use</strong> (doors / secret walls / elevator): Space or E. <strong>Map:</strong> M.
 					<strong>Save:</strong> F8, <strong>load:</strong> F9. <strong>Pause/menu:</strong> Esc.
 				</p>
@@ -125,6 +131,18 @@
 			</details>
 		</div>
 	</div>
+
+	<dialog id="wolfScoreEntry" class="competition-dialog">
+		<form id="wolfScoreForm" method="dialog">
+			<h2>TOP 10 SCORE</h2><p id="wolfScoreMessage"></p>
+			<label>Three initials <input id="wolfScoreInitials" maxlength="3" pattern="[A-Za-z]{3}" autocomplete="off" required></label>
+			<div><button type="submit">SAVE SCORE</button><button type="button" id="wolfScoreSkip">SKIP</button></div>
+		</form>
+	</dialog>
+	<dialog id="unlockNotice" class="competition-dialog unlock-notice">
+		<h2 id="unlockTitle"></h2><p id="unlockMessage"></p><ol id="unlockSequence"></ol>
+		<button type="button" id="unlockClose">ACKNOWLEDGE</button>
+	</dialog>
 
 	<script src="/wolf3d/js/variants.js?v=crt-full-profiles-1"></script>
 	<script src="/wolf3d/js/palette.js?v=1.0.10"></script>
@@ -136,8 +154,8 @@
 	<script src="/wolf3d/js/opl2.js?v=1.0.10"></script>
 	<script src="/wolf3d/js/music.js?v=1.0.10"></script>
 	<script src="/wolf3d/js/ai.js?v=1.0.10"></script>
-	<script src="/wolf3d/js/game.js?v=crt-game-only-3"></script>
-	<script src="/wolf3d/js/main.js?v=crt-compact-overlay-11"></script>
+	<script src="/wolf3d/js/game.js?v=competition-57"></script>
+	<script src="/wolf3d/js/main.js?v=score-return-68"></script>
 </body>
 
 </html>

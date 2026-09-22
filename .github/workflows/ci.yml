@@ -26,3 +26,24 @@ jobs:
           node-version: 22
       - name: Validate source and excluded content
         run: ./scripts/test.sh
+
+  combined:
+    name: Combined gateway and extension smoke test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out Wolf extension
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: wolf
+      - name: Check out Scene Access Gateway
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: zipkindev/scene-access-gateway
+          path: gateway
+      - name: Use Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Build and smoke-test both repositories
+        run: ./wolf/scripts/smoke-combined.sh ./gateway

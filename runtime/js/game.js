@@ -191,6 +191,10 @@
 	var PAR_TIMES = null;       // per-floor par times in minutes (wl_inter.cpp)
 	var PAR_AMOUNT = 500;       // points per second saved against par
 	var PERCENT100AMT = 10000;  // points for a clean 100% in a category
+	function newRunId() {
+		try { return root.crypto.randomUUID().replace(/-/g, ''); }
+		catch (e) { return (Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).slice(0, 32); }
+	}
 	if (root.WolfVariant) {
 		root.WolfVariant.onUse(function (v) {
 			if (!v) return;
@@ -219,15 +223,15 @@
 			health: 100, ammo: STARTAMMO, weapon: WP.PISTOL, chosen: WP.PISTOL,
 			have: [true, true, false, false],
 			score: 0, lives: 3, nextExtra: 40000, difficulty: 1, godmode: false, noclip: false, gatlingFace: 0, lastHurtBy: null, infiniteAmmo: false, keys: 0,
-			allWeapons: false, gameOver: false,
+			allWeapons: false, gameOver: false, assisted: false, runId: newRunId(),
 			damageFlash: 0, fireCd: 0, dead: false, respawn: 0,
 			wpnAnimT: 0, wpnAnimDur: 0, bob: 0, faceframe: 0, faceTimer: 0
 		};
 	};
 
 	Game.prototype.setDifficulty = function (d) { this.gs.difficulty = d | 0; };
-	Game.prototype.setGodmode = function (on) { this.gs.godmode = !!on; };
-	Game.prototype.setNoclip = function (on) { this.gs.noclip = !!on; };
+	Game.prototype.setGodmode = function (on) { this.gs.godmode = !!on; if (on) this.gs.assisted = true; };
+	Game.prototype.setNoclip = function (on) { this.gs.noclip = !!on; if (on) this.gs.assisted = true; };
 	Game.prototype.setShowMap = function (on) {
 		this.showMap = !!on;
 		if (this.minimap) this.minimap.style.display = this.showMap ? 'block' : 'none';
@@ -443,10 +447,12 @@
 	};
 	Game.prototype.setInfiniteAmmo = function (on) {
 		this.gs.infiniteAmmo = !!on;
+		if (on) this.gs.assisted = true;
 		if (on) this.gs.ammo = Math.max(this.gs.ammo, 99);
 	};
 	Game.prototype.setAllWeapons = function (on) {
 		this.gs.allWeapons = !!on;      // remembered, so a respawn restores them
+		if (on) this.gs.assisted = true;
 		if (!on) return;
 		this.gs.have = [true, true, true, true];
 		this.gs.ammo = Math.max(this.gs.ammo, 99);
@@ -635,7 +641,7 @@
 			if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); self.keys[e.code] = false; return; }
 			if (e.code === 'F8') { e.preventDefault(); self.quickSave(); }
 			if (e.code === 'F9') { e.preventDefault(); self.quickLoad(); }
-			if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].indexOf(e.code) >= 0) e.preventDefault();
+			if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'ShiftLeft', 'ShiftRight'].indexOf(e.code) >= 0) e.preventDefault();
 		});
 		window.addEventListener('keyup', function (e) { self.keys[e.code] = false; });
 		window.addEventListener('resize', function () { if (self.rc) self._resize(); });
@@ -699,7 +705,8 @@
 			if (k['Digit' + (n + 1)] && gs.have[n]) this._switchWeapon(n);
 		}
 
-		var fireHeld = !!(k['ControlLeft'] || k['ControlRight'] || this.touch.fire);
+		// Shift avoids Chrome's reserved Ctrl+W close-tab shortcut during WASD play.
+		var fireHeld = !!(k['ShiftLeft'] || k['ShiftRight'] || this.touch.fire);
 		var auto = (gs.weapon === WP.MG || gs.weapon === WP.CHAINGUN);
 		var wantFire = auto ? fireHeld : (fireHeld && !this._fireWasDown);
 		this._fireWasDown = fireHeld;
@@ -1130,11 +1137,11 @@
 		var next;
 
 		if (mode === 'victory') {
-			// Wolfenstein rolls on into the next episode. Spear is a single campaign:
-			// once it is won there is nowhere left to go, so the run ends and the menu
-			// comes back instead of dumping you on floor 1 again.
-			if (!EPISODES) { this._campaignDone = true; next = this._levelIndex; }
-			else next = ((ep + 1) * EPISODE_FLOORS) % count;
+			// Spear is one flat campaign. Wolfenstein ends after the sixth episode
+			// instead of silently wrapping back to episode one.
+			var lastEpisode = EPISODES && ep === Math.ceil(count / EPISODE_FLOORS) - 1;
+			if (!EPISODES || lastEpisode) { this._campaignDone = true; next = this._levelIndex; }
+			else next = (ep + 1) * EPISODE_FLOORS;
 		} else if (SECRET_MAP) {
 			// Spear routes its two bonus floors by map number rather than by an
 			// episode slot: the hidden elevator on map 3 leads to map 18 and the one
@@ -1351,7 +1358,7 @@
 			if (!goHeld && !goTap) this._gameOverReady = true;   // wait for release first
 			if (this._gameOverReady && (goHeld || goTap)) {
 				this.running = false;
-				if (this.onGameOver) this.onGameOver();
+				if (this.onGameOver) this.onGameOver(this.runResult(false));
 				return;
 			}
 			this.rc.render(p);
@@ -1369,9 +1376,11 @@
 			if (!held && !tap) this._levelDoneReady = true;      // wait for release first
 			if (this._levelDoneReady && (held || tap)) {
 				if (this._campaignDone) {                        // nothing left to play
+					var completedRun = this.runResult(true);
 					this._campaignDone = false;
 					this.clearRun();
-					this.exitToMenu();
+					if (this.onCampaignComplete) this.onCampaignComplete(completedRun);
+					else if (this.onMenu) this.onMenu();
 					return;
 				}
 				this.startLevel(this._pendingLevel);
@@ -1813,6 +1822,13 @@
 	function padL(s, n) { s = String(s); while (s.length < n) s = ' ' + s; return s; }
 	function padR(s, n) { s = String(s); while (s.length < n) s = s + ' '; return s; }
 
+	Game.prototype.runResult = function (completed) {
+		var variant = (root.WolfVariant && root.WolfVariant.active) ? root.WolfVariant.active.id : 'WL6';
+		return { game: variant === 'SOD' ? 'spear' : 'wolf3d', variant: variant,
+			score: Math.max(0, Math.floor(this.gs.score || 0)), difficulty: this.gs.difficulty | 0,
+			assisted: !!this.gs.assisted, completed: !!completed, runId: this.gs.runId };
+	};
+
 	// ---- Save / load -------------------------------------------------------
 	//
 	// Everything runs client-side, so a save is just a JSON snapshot kept in the
@@ -1868,7 +1884,7 @@
 				health: gs.health, ammo: gs.ammo, weapon: gs.weapon, chosen: gs.chosen,
 				have: gs.have.slice(), score: gs.score, lives: gs.lives, nextExtra: gs.nextExtra, keys: gs.keys,
 				difficulty: gs.difficulty, godmode: gs.godmode, noclip: gs.noclip, infiniteAmmo: gs.infiniteAmmo,
-				allWeapons: gs.allWeapons
+				allWeapons: gs.allWeapons, assisted: gs.assisted, runId: gs.runId
 			},
 			map: map,
 			doors: doors,
@@ -1906,6 +1922,9 @@
 		this.gs.noclip = !!st.gs.noclip;
 		this.gs.infiniteAmmo = !!st.gs.infiniteAmmo;
 		this.gs.allWeapons = !!st.gs.allWeapons;
+		this.gs.assisted = typeof st.gs.assisted === 'boolean' ? st.gs.assisted :
+			!!(st.floor || st.gs.godmode || st.gs.noclip || st.gs.infiniteAmmo || st.gs.allWeapons);
+		if (/^[A-Za-z0-9_-]{16,64}$/.test(st.gs.runId || '')) this.gs.runId = st.gs.runId;
 		this.startLevel(st.floor);
 
 		// replay the map delta (settled pushwalls / flipped elevator)

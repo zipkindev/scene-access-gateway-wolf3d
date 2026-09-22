@@ -14,6 +14,11 @@
   `runtime/js/main.js`, `runtime/js/variants.js`, `runtime/css/style.css`, and
   `runtime/index.html` contain the portal, Spear, mobile, save, viewport, and
   presentation adaptations maintained by this project.
+- The release-78 synchronization imports the exact verified production-source
+  bytes for `runtime/js/game.js`, `runtime/js/main.js`, `runtime/css/style.css`,
+  `runtime/index.html`, and `integration/future-wolf3d-crt.js`. Their SHA-256
+  identities and final compositor/filter contracts are enforced by
+  `test/release-78.test.js`.
 
 ## Upstream implementation references
 
