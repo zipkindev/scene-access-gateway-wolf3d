@@ -1,0 +1,22 @@
+{
+  "WL6": {
+    "VSWAP.WL6": { "bytes": 1545400, "sha256": "49ba24e0b3916732cd065122de4fe6fb6e6a5009c353eafa407c0e3a5a503407" },
+    "MAPHEAD.WL6": { "bytes": 402, "sha256": "289e04f47128a5ba19f9b3f912b4048e26dc16c6fa00205ead51efb1d8e23c69" },
+    "GAMEMAPS.WL6": { "bytes": 150652, "sha256": "3df9f2ad54c601e79ab117c8175477b5d96571ba9e290cb9cd7d910abfeaae56" },
+    "VGADICT.WL6": { "bytes": 1024, "sha256": "4411cbdb446af98392cf685a583d3266e644edcff149807fab0ae5850c54586c" },
+    "VGAHEAD.WL6": { "bytes": 450, "sha256": "a9823004be77b68813f0e4d9ac35947e2e2586271fbc2fb0685ff8ecb1deb3d5" },
+    "VGAGRAPH.WL6": { "bytes": 276096, "sha256": "0f7a038b8523d729eb98fe0bc50a858c47a41569e07cbbbf5d8aca8ff4e9863e" },
+    "AUDIOHED.WL6": { "bytes": 1156, "sha256": "16e21eab17af2062019cc85cc271f887191301d1aa6de04b1afac5998aad9d9c" },
+    "AUDIOT.WL6": { "bytes": 320209, "sha256": "2cc23cb811df16e656f1fea25cd2629859c1ec9997d35bc3b1776594094b67ef" }
+  },
+  "SOD": {
+    "VSWAP.SOD": { "bytes": 730624, "sha256": "2312bcadc05bbcbfce24514ab3000a15a2979fa62db9075271b762823588074e" },
+    "MAPHEAD.SOD": { "bytes": 402, "sha256": "4df9b8f9999a7542ba1172ba91c153e42b345bd4fe3466f659c5613451d2ec87" },
+    "GAMEMAPS.SOD": { "bytes": 5534, "sha256": "93d6ae6ce7c9b9cbadee12003877f206432a197702dd63ef0fa8e27dafed2d77" },
+    "VGADICT.SOD": { "bytes": 1024, "sha256": "a80aa6ad4052114209db3961c81864a692172d9d86db4af1901e4b5178aa8ef3" },
+    "VGAHEAD.SOD": { "bytes": 402, "sha256": "776252326c47d82356d170ee7f03b8e96edbbc059fdd8167f21a21d2e8aa5148" },
+    "VGAGRAPH.SOD": { "bytes": 305891, "sha256": "718d69c4ff992b37bd1647cf7c16111023e69674a06e999d12847d0536ec434b" },
+    "AUDIOHED.SOD": { "bytes": 1072, "sha256": "47f3236be1544f51d1dd993a168eeaa22da672fdfa30fb6a57947167afec7d25" },
+    "AUDIOT.SOD": { "bytes": 93412, "sha256": "410cfca99bd4b17a229031134c5436fce2daeeed3708fc2d13aad3dc05d26d36" }
+  }
+}

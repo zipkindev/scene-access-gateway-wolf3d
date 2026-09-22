@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+	<title>uWolf</title>
+	<link rel="icon" href="/wolf3d/favicon.ico" sizes="any">
+	<link rel="icon" href="/wolf3d/favicon.svg" type="image/svg+xml">
+	<link rel="stylesheet" href="/wolf3d/css/style.css?v=crt-compact-overlay-11">
+</head>
+
+<body>
+
+	<canvas id="screen"></canvas>
+	<canvas id="minimap" width="180" height="180"></canvas>
+
+	<div id="hud" class="hidden">
+		<button id="btnSave" class="hud-btn" aria-label="Save game">SAVE</button>
+		<button id="btnMap" class="hud-btn" aria-label="Toggle map">MAP</button>
+		<button id="btnMobile" class="hud-btn" aria-label="Toggle mobile controls" aria-pressed="false">MOBILE</button>
+		<button id="btnWide" class="hud-btn" aria-label="Toggle wide game view" aria-pressed="false">WIDE</button>
+		<button id="btnWpn" class="weapon-btn hidden" aria-label="Switch weapon">WPN</button>
+		<button id="btnFire" class="fire-btn hidden" aria-label="Fire">FIRE</button>
+		<div id="dpad" class="dpad hidden">
+			<button class="dpad-btn dpad-up" data-pad="fwd" aria-label="Forward">▲</button>
+			<button class="dpad-btn dpad-left" data-pad="left" aria-label="Turn left">◀</button>
+			<button class="dpad-btn dpad-mid" data-pad="use" aria-label="Open / use">◎</button>
+			<button class="dpad-btn dpad-right" data-pad="right" aria-label="Turn right">▶</button>
+			<button class="dpad-btn dpad-down" data-pad="back" aria-label="Backward">▼</button>
+		</div>
+	</div>
+
+	<div id="menu" class="hidden">
+		<div class="panel">
+			<h1>uWolf</h1>
+			<p class="sub">A Wolfenstein 3D raycasting engine that reads <em>your own</em> game data. No content ships with
+				it.</p>
+
+			<div class="step">
+				<div>
+					<strong>Game Data</strong>
+					<p>Copy these from your registered Wolfenstein 3D (v1.4) into this page's folder — your web
+						server's Wolfenstein root.</p>
+				</div>
+			</div>
+
+			<div class="step">
+				<div>
+					<strong>Game Variant</strong>
+					<select id="variantSel" class="variant-sel"></select>
+
+					<div class="files">
+						<div class="files-row">
+							<span class="files-what">Required (WL6/SOD)</span>
+							<span class="files-list">
+								<code>VSWAP</code><code>MAPHEAD</code><code>GAMEMAPS</code>
+							</span>
+						</div>
+						<div class="files-row">
+							<span class="files-what">Status bar &amp; BJ face (WL6/SOD) <em>(opt.)</em></span>
+							<span class="files-list">
+								<code>VGAGRAPH</code><code>VGAHEAD</code><code>VGADICT</code>
+							</span>
+						</div>
+						<div class="files-row">
+							<span class="files-what">Music &amp; sound effects (WL6/SOD) <em>(opt.)</em></span>
+							<span class="files-list">
+								<code>AUDIOHED</code><code>AUDIOT</code>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="choices">
+				<button id="btnFetch">Retry</button>
+			</div>
+			<p class="hint" id="fetchHint">The game data loads automatically from this folder. If it isn't found, add the
+				files above and press Retry.</p>
+
+			<div id="levelBox" class="hidden">
+				<button id="btnResume" class="resume-btn hidden">Resume game</button>
+
+				<div id="savesBox" class="hidden">
+					<strong id="savesLabel">Continue a saved game</strong>
+					<div id="savesList" class="saves"></div>
+				</div>
+
+				<label for="levelSel"><strong id="newGameLabel">Start a new game</strong></label>
+				<select id="levelSel"></select>
+
+				<div class="opts">
+					<label for="diffSel">Difficulty</label>
+					<select id="diffSel">
+						<option value="0">Can I play, Daddy?</option>
+						<option value="1" selected>Don't hurt me</option>
+						<option value="2">Bring 'em on</option>
+						<option value="3">I am Death incarnate</option>
+					</select>
+					<label class="chk"><input type="checkbox" id="godChk"> God mode</label>
+					<label class="chk"><input type="checkbox" id="allWpnChk"> All weapons</label>
+					<label class="chk"><input type="checkbox" id="ammoChk"> Infinite ammo</label>
+					<label class="chk"><input type="checkbox" id="noclipChk"> No clipping</label>
+					<label class="chk"><input type="checkbox" id="mobileChk"> Mobile controls</label>
+					<label class="chk"><input type="checkbox" id="musicChk"> Music</label>
+					<p id="musicMode" class="music-mode" role="status" aria-live="polite"></p>
+				</div>
+
+				<div class="finalrow">
+					<button id="btnStart">Enter</button>
+				</div>
+			</div>
+
+			<p id="status" class="status"></p>
+
+			<details class="controls">
+				<summary>Controls</summary>
+				<p><strong>Move:</strong> W/A/S/D, turn ←/→. <strong>Fire:</strong> Ctrl. <strong>Weapons:</strong> 1–4.
+					<strong>Use</strong> (doors / secret walls / elevator): Space or E. <strong>Map:</strong> M.
+					<strong>Save:</strong> F8, <strong>load:</strong> F9. <strong>Pause/menu:</strong> Esc.
+				</p>
+				<p><strong>Touch:</strong> enable <strong>Mobile controls</strong> for an on-screen D-pad (up/down walk, left/right turn, centre opens doors) and a FIRE button.</p>
+			</details>
+		</div>
+	</div>
+
+	<script src="/wolf3d/js/variants.js?v=crt-full-profiles-1"></script>
+	<script src="/wolf3d/js/palette.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/wl_formats.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/vgagraph.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/raycaster.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/enemies.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/sound.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/opl2.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/music.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/ai.js?v=1.0.10"></script>
+	<script src="/wolf3d/js/game.js?v=crt-game-only-3"></script>
+	<script src="/wolf3d/js/main.js?v=crt-compact-overlay-11"></script>
+</body>
+
+</html>

@@ -1,0 +1,665 @@
+/* uWolf — deliberately spare "terminal-in-a-bunker" look.
+	 The screen is the hero; chrome stays out of the way. */
+:root {
+	--ink: #d7d2c4;
+	--dim: #8f8a7c;
+	--edge: #2b2b28;
+	--panel: #14140f;
+	--accent: #b7902e;
+	/* brass, not the usual template terracotta */
+	--accent-lit: #e7bd4a;
+	--danger: #c0553c;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+	overflow: hidden;
+	background: #000;
+	color: var(--ink);
+	font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+	touch-action: none;
+}
+
+#screen {
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
+	background: #000;
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
+}
+
+#minimap {
+	position: fixed;
+	top: 4%;
+	right: 20%;
+	width: 12.3vw;
+	height: 12.3vw;
+	border: 1px solid var(--edge);
+	border-radius: 2px;
+	image-rendering: pixelated;
+	pointer-events: none;
+}
+
+/* --- HUD --- */
+#hud {
+	position: fixed;
+	left: 20%;
+	top: 4%;
+	padding: .82vw;
+	max-width: 34%;
+	display: flex;
+	gap: .66vw;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	pointer-events: none;
+	z-index: 5;
+}
+
+.hud-btn {
+	pointer-events: auto;
+	min-width: 5.25vw;
+	padding: .82vw 1.15vw;
+	background: rgba(20, 20, 15, 0.62);
+	color: var(--ink);
+	border: 1px solid var(--edge);
+	border-radius: 3px;
+	font: inherit;
+	font-size: 1.07vw;
+	letter-spacing: 0.12em;
+	backdrop-filter: blur(2px);
+}
+
+.hud-btn:active {
+	border-color: var(--accent);
+	color: var(--accent-lit);
+}
+
+.hud-btn.active {
+	border-color: var(--accent);
+	background: rgba(100, 80, 24, 0.72);
+	color: var(--accent-lit);
+}
+
+/* Menu options (difficulty + god mode) */
+.opts {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin: 10px 0;
+}
+
+.opts label {
+	font-size: 13px;
+	opacity: 0.85;
+}
+
+.opts select {
+	padding: 7px 8px;
+	background: #0e0e0a;
+	color: var(--ink);
+	border: 1px solid var(--edge);
+	border-radius: 3px;
+	font: inherit;
+}
+
+.opts .chk {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+}
+
+.opts .chk input {
+	width: 16px;
+	height: 16px;
+	margin: 0;                 /* drop the UA default margin so the label text
+	                              starts at exactly 16px + 6px gap = 22px, which
+	                              is what .music-mode's padding-left lines up to */
+	accent-color: var(--accent);
+}
+
+/* Wraps the Enter button as a full-width row so it always starts on its own
+   line inside the flex #levelBox, instead of packing beside the options. */
+.finalrow {
+	flex-basis: 100%;
+}
+
+/* User-facing audio status under the options. Empty by default -> collapses. */
+.music-mode {
+	flex-basis: 100%;       /* own line within the options group */
+	padding-left: 22px;     /* line up under the word "Music": checkbox 16px + 6px gap */
+	margin: -5px 0 0;       /* hug the Music row above it */
+	font-size: 11.5px;
+	line-height: 1.5;
+	color: var(--dim);
+}
+
+.music-mode:empty {
+	display: none;
+}
+
+.music-mode.ok,
+.music-mode.warn {
+	color: var(--accent-lit);
+}
+
+/* --- Menu --- */
+#menu {
+	display: none !important;
+	position: fixed;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	padding: 20px;
+	overflow: auto;
+	background:
+		radial-gradient(120% 90% at 50% 0%, #1b1b15 0%, #0a0a07 60%, #000 100%);
+}
+
+body.secret-menu-open #menu {
+	display: grid !important;
+}
+
+.panel {
+	width: min(560px, 100%);
+	background: var(--panel);
+	border: 1px solid var(--edge);
+	border-radius: 4px;
+	padding: 26px 26px 20px;
+	box-shadow: 0 0 0 1px #000, 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+h1 {
+	margin: 0;
+	font-size: 40px;
+	letter-spacing: 0.28em;
+	font-weight: 800;
+	color: var(--accent-lit);
+	text-shadow: 0 2px 0 #000, 0 0 20px rgba(183, 144, 46, 0.25);
+}
+
+.sub {
+	margin: 6px 0 20px;
+	color: var(--dim);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.sub em {
+	color: var(--ink);
+	font-style: normal;
+	text-decoration: underline;
+}
+
+.step {
+	display: flex;
+	gap: 14px;
+	margin: 0 0 18px;
+}
+
+.step .n {
+	flex: 0 0 auto;
+	width: 26px;
+	height: 26px;
+	display: grid;
+	place-items: center;
+	border: 1px solid var(--accent);
+	color: var(--accent-lit);
+	border-radius: 50%;
+	font-size: 13px;
+}
+
+.step strong {
+	display: block;
+	margin-bottom: 4px;
+}
+
+.step p {
+	margin: 0;
+	color: var(--dim);
+	font-size: 12.5px;
+	line-height: 1.55;
+}
+
+code {
+	color: var(--accent-lit);
+}
+
+.choices {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 6px 0 8px;
+}
+
+.choices button {
+	flex: 1 1 200px;
+	text-align: center;
+	padding: 13px 14px;
+	font: inherit;
+	font-size: 13px;
+	cursor: pointer;
+	background: #1d1d16;
+	color: var(--ink);
+	border: 1px solid var(--edge);
+	border-radius: 3px;
+}
+
+.choices button:hover {
+	border-color: var(--accent);
+}
+
+.hint {
+	margin: 6px 0 0;
+	color: var(--dim);
+	font-size: 11.5px;
+	line-height: 1.5;
+}
+
+#levelBox {
+	margin-top: 22px;
+	padding-top: 18px;
+	border-top: 1px solid var(--edge);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+}
+
+#levelBox label {
+	flex: 1 1 100%;
+	margin-bottom: 4px;
+	font-size: 13px;
+}
+
+/* The New Game heading is a section title like "Continue a saved game" — keep it
+   at heading size, not the 13px the wrapping label above would otherwise impose. */
+#newGameLabel {
+	font-size: 16px;
+}
+
+#levelSel {
+	flex: 1 1 200px;
+	padding: 11px;
+	font: inherit;
+	font-size: 13px;
+	background: #1d1d16;
+	color: var(--ink);
+	border: 1px solid var(--edge);
+	border-radius: 3px;
+}
+
+#btnStart {
+	padding: 11px 22px;
+	font: inherit;
+	font-size: 13px;
+	letter-spacing: 0.1em;
+	cursor: pointer;
+	background: var(--accent);
+	color: #14140f;
+	border: none;
+	border-radius: 3px;
+	font-weight: 700;
+}
+
+#btnStart:hover {
+	background: var(--accent-lit);
+}
+
+.status {
+	margin: 16px 0 0;
+	min-height: 18px;
+	font-size: 12.5px;
+	color: var(--dim);
+}
+
+.status.err {
+	color: var(--danger);
+}
+
+.controls {
+	margin-top: 16px;
+	color: var(--dim);
+	font-size: 12px;
+}
+
+.controls summary {
+	cursor: pointer;
+	color: var(--ink);
+}
+
+.controls p {
+	margin: 8px 0 0;
+	line-height: 1.5;
+}
+
+.hidden {
+	display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		transition: none !important;
+	}
+}
+/* --- Saved games --- */
+#savesBox {
+	margin: 6px 0 14px;
+}
+
+#savesBox > strong {
+	display: block;
+	margin-bottom: 8px;
+}
+
+.saves {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.save-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+	padding: 8px 10px;
+	background: #16160f;
+	border: 1px solid var(--edge);
+	border-radius: 3px;
+}
+
+.save-txt {
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.save-txt span {
+	opacity: 0.7;
+}
+
+.save-btns {
+	display: flex;
+	gap: 6px;
+}
+
+.save-btns button {
+	padding: 6px 10px;
+	font: inherit;
+	font-size: 12px;
+	cursor: pointer;
+	background: #1d1d16;
+	color: var(--ink);
+	border: 1px solid var(--edge);
+	border-radius: 3px;
+}
+
+.save-btns button:hover {
+	border-color: var(--accent);
+}
+
+.save-btns button.danger:hover {
+	border-color: #c05a4a;
+	color: #ffb4a6;
+}
+
+/* Resume a run that was paused with Escape / MENU */
+.resume-btn {
+	display: block;
+	width: 100%;
+	margin: 0 0 14px;
+	padding: 13px 14px;
+	font: inherit;
+	font-size: 13px;
+	letter-spacing: 0.08em;
+	cursor: pointer;
+	color: var(--accent-lit);
+	background: #2a2312;
+	border: 1px solid var(--accent);
+	border-radius: 3px;
+}
+
+.resume-btn:hover {
+	background: #362d16;
+}
+
+/* On-screen weapon and fire buttons — only shown in mobile mode. */
+.weapon-btn {
+	pointer-events: auto;
+	position: fixed;
+	right: 14%;
+	bottom: 55%;
+	min-width: 5.6vw;
+	padding: .9vw .99vw;
+	background: rgba(20, 20, 15, 0.68);
+	color: var(--ink);
+	border: 1px solid var(--edge);
+	border-radius: 5px;
+	font: inherit;
+	font-size: 1.07vw;
+	letter-spacing: 0.1em;
+	touch-action: manipulation;
+	z-index: 6;
+}
+
+.weapon-btn:active { border-color: var(--accent); color: var(--accent-lit); }
+.weapon-btn.hidden { display: none; }
+
+.fire-btn {
+	pointer-events: auto;
+	position: fixed;
+	right: 10%;
+	bottom: 22%;
+	width: 7.6vw;
+	height: 7.6vw;
+	border-radius: 50%;
+	background: rgba(150, 30, 20, 0.5);
+	color: #ffd7d0;
+	border: 2px solid rgba(230, 90, 70, 0.7);
+	font: inherit;
+	font-weight: bold;
+	font-size: 1.24vw;
+	letter-spacing: 0.1em;
+	backdrop-filter: blur(2px);
+	touch-action: none;          /* don't let the browser pan/zoom on this */
+	user-select: none;
+	z-index: 6;
+}
+
+.fire-btn:active {
+	background: rgba(210, 60, 40, 0.75);
+	color: #fff;
+}
+
+.fire-btn.hidden {
+	display: none;
+}
+
+/* On-screen D-pad — shown with "Mobile controls". Up/down walk, left/right turn
+   (like the original's arrow keys), centre opens doors / pushes secret walls. */
+.dpad {
+	pointer-events: auto;
+	position: fixed;
+	left: 14%;
+	bottom: 22%;
+	display: grid;
+	grid-template-columns: repeat(3, 4.3vw);
+	grid-template-rows: repeat(3, 4.3vw);
+	gap: .33vw;
+	touch-action: none;
+	user-select: none;
+	z-index: 6;
+}
+
+.dpad.hidden {
+	display: none;
+}
+
+.dpad-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	font-size: 1.48vw;
+	line-height: 1;
+	cursor: pointer;
+	color: var(--ink);
+	background: rgba(20, 20, 15, 0.55);
+	border: 1px solid var(--edge);
+	border-radius: 6px;
+	backdrop-filter: blur(2px);
+	touch-action: none;
+}
+
+/* .held is set by the pointer hit-test, not :active — the pointer is captured on
+   the pad, so :active would stay stuck on whichever button was pressed first. */
+.dpad-btn.held {
+	border-color: var(--accent);
+	color: var(--accent-lit);
+	background: rgba(60, 50, 20, 0.6);
+}
+
+.dpad-up { grid-area: 1 / 2; }
+.dpad-left { grid-area: 2 / 1; }
+.dpad-mid { grid-area: 2 / 2; font-size: 1.24vw; }
+.dpad-right { grid-area: 2 / 3; }
+.dpad-down { grid-area: 3 / 2; }
+
+/* The parent board can promote the iframe to a viewport-sized game surface.
+   Keep touch targets useful without letting them dominate a phone display. */
+body.wide-mode #hud { left: 2%; top: 2%; max-width: 82%; gap: 6px; padding: 6px; }
+body.wide-mode .hud-btn { min-width: 58px; padding: 8px 10px; font-size: 11px; letter-spacing: .07em; }
+body.wide-mode #minimap { right: 2%; top: 2%; width: 100px; height: 100px; }
+body.wide-mode .dpad { left: 4%; bottom: 5%; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px); gap: 3px; }
+body.wide-mode .dpad-btn { font-size: 16px; }
+body.wide-mode .dpad-mid { font-size: 13px; }
+body.wide-mode .fire-btn { right: 4%; bottom: 9%; width: 78px; height: 78px; font-size: 12px; }
+body.wide-mode .weapon-btn { right: 5%; bottom: 43%; min-width: 58px; padding: 8px; font-size: 10px; }
+
+@media (max-width: 700px), (max-height: 500px) {
+	body.wide-mode #hud { left: 2%; top: 2%; max-width: 82%; gap: 4px; padding: 4px; }
+	body.wide-mode .hud-btn { min-width: 46px; padding: 7px 8px; font-size: 10px; letter-spacing: .06em; }
+	body.wide-mode #minimap { right: 2%; top: 2%; width: 86px; height: 86px; }
+	body.wide-mode .dpad { left: 4%; bottom: 5%; grid-template-columns: repeat(3, min(40px, 8vw)); grid-template-rows: repeat(3, min(40px, 8vw)); gap: 3px; }
+	body.wide-mode .dpad-btn { font-size: 15px; }
+	body.wide-mode .dpad-mid { font-size: 13px; }
+	body.wide-mode .fire-btn { right: 4%; bottom: 9%; width: min(72px, 14.4vw); height: min(72px, 14.4vw); font-size: 12px; }
+	body.wide-mode .weapon-btn { right: 5%; bottom: 43%; min-width: 54px; padding: 8px; font-size: 10px; }
+}
+
+/* --- The three groups of data files ---
+   The tight spot is a phone in portrait: after the panel padding, the step number and
+   the row's own padding there is barely 200px left, and "VGAGRAPH.WL6" alone is ~100px
+   of that. So every box is allowed to shrink (min-width: 0 — flex items refuse to by
+   default), the file names wrap onto their own lines, and nothing is nailed to a
+   pixel width. */
+.files {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 10px;
+	max-width: 100%;
+}
+
+.files-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 4px 10px;
+	padding: 7px 9px;
+	box-sizing: border-box;
+	max-width: 100%;
+	min-width: 0;
+	background: #16160f;
+	border: 1px solid var(--edge);
+	border-left: 3px solid var(--accent);
+	border-radius: 3px;
+}
+
+.files-row:not(:first-child) {
+	border-left-color: var(--edge);
+}
+
+.files-what {
+	/* Always a line of its own. Letting it share the line with the file names (flex:
+	   1 1 190px) meant a short label like "Music & sound effects" left just enough room
+	   for its two files to squeeze in beside it, while a longer one pushed its files
+	   down — so the three rows lined up differently for no reason the reader can see. */
+	flex: 0 0 100%;
+	min-width: 0;
+	font-size: 12px;
+	letter-spacing: 0.04em;
+	color: var(--ink);
+}
+
+.files-what em {
+	font-style: normal;
+	opacity: 0.55;
+}
+
+.files-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.files-list code {
+	padding: 2px 6px;
+	background: #24241a;
+	border-radius: 2px;
+	font-size: 12px;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+@media (max-width: 560px) {
+	/* Give the text back the room the panel was spending on padding, and let the
+	   labels have a line to themselves so the file names never have to squeeze in
+	   beside them. */
+	.panel { padding: 18px 14px 16px; }
+	.step { gap: 10px; }
+	.files-list code { font-size: 11px; padding: 2px 5px; }
+}
+
+/* Game Variant selector: gold-on-dark, spanning the section width. */
+.variant-sel {
+	display: block;
+	width: 100%;
+	margin: 8px 0 4px;
+	padding: 8px 9px;
+	background: #0e0e0a;
+	color: var(--accent-lit);
+	border: 1px solid var(--accent);
+	border-radius: 3px;
+	font: inherit;
+	font-weight: 700;
+	letter-spacing: .02em;
+}
+.variant-sel:focus {
+	outline: none;
+	border-color: var(--accent-lit);
+	box-shadow: 0 0 0 2px rgba(183, 144, 46, 0.25);
+}
+.variant-sel option {
+	background: #0e0e0a;
+	color: var(--accent-lit);
+}
+.variant-sel option:disabled {
+	color: var(--dim);
+}

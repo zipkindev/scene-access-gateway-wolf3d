@@ -1,0 +1,8 @@
+services:
+  backend:
+    environment:
+      WOLF3D_ROOT: /opt/scene-access-gateway/extensions/wolf3d
+      WOLF3D_CLIENT_SCRIPT: /opt/scene-access-gateway/extensions/future-wolf3d-crt.js
+    volumes:
+      - ${SAG_WOLF3D_EXTENSION_DIR:?Set SAG_WOLF3D_EXTENSION_DIR}/runtime:/opt/scene-access-gateway/extensions/wolf3d:ro
+      - ${SAG_WOLF3D_EXTENSION_DIR:?Set SAG_WOLF3D_EXTENSION_DIR}/integration/future-wolf3d-crt.js:/opt/scene-access-gateway/extensions/future-wolf3d-crt.js:ro

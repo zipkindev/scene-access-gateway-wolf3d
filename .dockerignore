@@ -1,0 +1,10 @@
+.git
+.local
+node_modules
+*.WL1
+*.WL3
+*.WL6
+*.SOD
+*.SD1
+*.SD2
+*.SD3
