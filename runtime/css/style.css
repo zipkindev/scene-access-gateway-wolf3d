@@ -169,8 +169,17 @@ body {
 		radial-gradient(120% 90% at 50% 0%, #1b1b15 0%, #0a0a07 60%, #000 100%);
 }
 
-body.secret-menu-open #menu {
+body.secret-menu-open #menu,
+body.scoreboard-only #menu {
 	display: grid !important;
+}
+
+/* A finished run may display scores, but never exposes the protected launcher. */
+body.scoreboard-only .panel > :not(.wolf-scores):not(.status) {
+	display: none !important;
+}
+body.scoreboard-only .panel {
+	width: min(520px, 100%);
 }
 
 .panel {
@@ -355,6 +364,19 @@ code {
 		transition: none !important;
 	}
 }
+.wolf-scores { margin-top:16px; padding-top:12px; border-top:1px solid var(--edge); }
+.wolf-scores > strong { color:var(--accent-lit); letter-spacing:.14em; }
+.wolf-scores ol { columns:2; margin:8px 0 4px; padding-left:24px; font-size:12px; line-height:1.55; }
+.wolf-scores p { margin:5px 0 0; color:var(--dim); font-size:10px; }
+.run-assisted { color:#e28b5d; } .run-unassisted { color:#78d8a1; }
+.competition-dialog { width:min(430px,calc(100% - 28px)); padding:22px; color:var(--ink); background:#11110d; border:1px solid var(--accent); border-radius:4px; font:13px/1.5 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; text-align:center; }
+.competition-dialog::backdrop { background:rgba(0,0,0,.82); }
+.competition-dialog h2 { margin:0 0 10px; color:var(--accent-lit); letter-spacing:.12em; }
+.competition-dialog input { display:block; width:6ch; margin:10px auto; padding:8px; color:var(--ink); background:#080805; border:1px solid var(--accent); font:700 26px/1 ui-monospace,monospace; letter-spacing:.22em; text-align:center; text-transform:uppercase; }
+.competition-dialog button { margin:8px 4px 0; padding:9px 12px; color:var(--ink); background:#1d1d16; border:1px solid var(--edge); font:inherit; cursor:pointer; }
+.competition-dialog button:hover { border-color:var(--accent); }
+.unlock-notice ol { margin:14px auto; padding-left:28px; max-width:310px; text-align:left; }
+
 /* --- Saved games --- */
 #savesBox {
 	margin: 6px 0 14px;

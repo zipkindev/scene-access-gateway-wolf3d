@@ -19,6 +19,9 @@ responsive controls, verification manifests, and import tooling. It does
   portal's in-scene game carousel.
 - A CRT boot, power-down, and game-switching presentation integrated with the
   authored scene rather than presented as a separate application.
+- The release-78 live-framebuffer compositor, 480-line transition, continuous
+  CRT filter, pixel-built boot/shutdown labels, synchronized transition audio,
+  and server-backed Wolf/Spear score flow.
 - Keyboard, mouse, touch, mobile HUD, save, map, and weapon-selection support.
 - Embedded scene controls plus a responsive wide/fullscreen mobile mode.
 - Scene-aware zoom and pinch behavior that coordinates the game viewport with
@@ -146,8 +149,19 @@ See [SOURCES.md](SOURCES.md) for the file-level source record and
 
 The validation checks JavaScript and shell syntax, parses the supported-data
 manifest, confirms the root and runtime GPL license files are byte-identical,
-rejects obsolete attribution, and verifies that no commercial game dataset is
-tracked.
+rejects obsolete attribution, verifies the exact release-78 source hashes,
+exercises its transition contracts, and confirms that no commercial game
+dataset is tracked.
+
+To build and smoke-test both repositories together:
+
+```sh
+./scripts/smoke-combined.sh ../scene-access-gateway
+```
+
+GitHub CI runs the same combined check from clean public checkouts without
+commercial game data. When verified local data is present, the script also
+checks the exact WL6 route and byte length.
 
 After importing data, run:
 
@@ -171,7 +185,7 @@ rebase it onto current `main`, retest it, and push it safely.
 | `runtime/` | uWolf-derived browser engine and ignored local game-data target |
 | `integration/` | Scene/CRT controller loaded by the main portal |
 | `manifests/` | Exact identities for supported user-supplied datasets |
-| `scripts/` | Safe import, verification, and source-boundary tests |
+| `scripts/` | Safe import, verification, source-boundary, and combined-stack tests |
 | `compose.extension.yaml` | Read-only extension mounts for the main stack |
 | `docs/` | Architecture and publication review records |
 

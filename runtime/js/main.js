@@ -16,6 +16,8 @@
 	var didAutoLaunch = false;
 
 	var status = $('status');
+	var pendingScore = null;
+	var DIFF_NAME = ['Daddy', "Don't hurt me", "Bring 'em on", 'Death incarnate'];
 	function say(msg, err) { status.textContent = msg; status.className = 'status' + (err ? ' err' : ''); }
 
 	function afterLoad(buffers) {
@@ -33,6 +35,7 @@
 			});
 			setupMusic(buffers);
 			$('levelBox').classList.remove('hidden');
+			loadWolfScores();
 			refreshSaves();
 			say('Loaded ' + game.data.numWalls + ' wall textures, ' + game.data.numSprites +
 				' sprites, ' + levels.length + ' levels.' +
@@ -407,8 +410,9 @@
 			game.setNoclip($('noclipChk').checked);
 			game.setAllWeapons($('allWpnChk').checked);
 			game.setInfiniteAmmo($('ammoChk').checked);
+			if (idx !== 0) game.gs.assisted = true;
 			game.startLevel(idx);
-			document.body.classList.remove('secret-menu-open');
+			document.body.classList.remove('secret-menu-open', 'scoreboard-only');
 			$('menu').classList.add('hidden');
 			$('hud').classList.remove('hidden');
 		} catch (e) { say('Level failed: ' + e.message, true); }
@@ -432,6 +436,7 @@
 	};
 
 	function openSecretMenu() {
+		document.body.classList.remove('scoreboard-only');
 		document.body.classList.add('secret-menu-open');
 		if (game.running) game.exitToMenu();
 		else game.onMenu();
@@ -453,23 +458,84 @@
 		{ id: '2', name: 'Slot 2', manual: true },
 		{ id: '3', name: 'Slot 3', manual: true }
 	];
-	var DIFF_NAME = ['Daddy', "Don't hurt me", "Bring 'em on", 'Death incarnate'];
-
 	function enterGame() {
-		document.body.classList.remove('secret-menu-open');
+		document.body.classList.remove('secret-menu-open', 'scoreboard-only');
 		$('menu').classList.add('hidden');
 		$('hud').classList.remove('hidden');
 	}
 
-	// Out of lives: the run is over — drop it, so there is nothing left to resume.
-	game.onGameOver = function () {
-		$('menu').classList.remove('hidden');
-		$('hud').classList.add('hidden');
+	function scoreGame() { return currentVariantId() === 'SOD' ? 'spear' : 'wolf3d'; }
+	function scoreName(id) { return id === 'spear' ? 'Spear of Destiny' : 'Wolfenstein 3D'; }
+	function scoreFlag(entry) { return (entry.assisted ? 'A' : 'U') + (entry.completed ? ' ★' : ''); }
+	async function loadWolfScores() {
+		var box = $('wolfScores'), list = $('wolfScoreList'), id = scoreGame();
+		if (!box || !list) return;
+		box.classList.remove('hidden'); $('wolfScoreTitle').textContent = scoreName(id) + ' · TOP 10';
+		try {
+			var response = await fetch('/api/arcade/scores?game=' + id, { credentials: 'same-origin', cache: 'no-store' });
+			var board = response.ok ? (await response.json()).board || [] : [];
+			list.replaceChildren();
+			board.forEach(function (entry) { var item = document.createElement('li'); item.textContent = entry.initials + '  ' + entry.score + '  ' + scoreFlag(entry); list.appendChild(item); });
+			if (!board.length) { var empty = document.createElement('li'); empty.textContent = 'Awaiting first score'; list.appendChild(empty); }
+		} catch (e) { var unavailable = document.createElement('li'); unavailable.textContent = 'Scores unavailable'; list.replaceChildren(unavailable); }
+	}
+	function notifyScoreFinished() {
+		if (window.parent !== window) window.parent.postMessage({ type: 'uwolf-score-finished' }, '*');
+	}
+	function finishScoreFlow(result) {
+		if (result && result.completed) showUnlock(result.variant);
+		else notifyScoreFinished();
+	}
+	function showUnlock(variant) {
+		var spear = variant === 'SOD';
+		$('unlockTitle').textContent = spear ? 'SECRET-MENU REWARD STORED' : 'SPEAR REWARD STORED';
+		$('unlockMessage').textContent = spear ? 'Your reward appears after Spear is closed. Wolfenstein will load before the room sequence is revealed.' : 'Your reward appears after Wolfenstein is closed. It is saved if you close this browser first.';
+		var steps = spear ? ['Save or skip your score', 'Acknowledge this message', 'Use either CRT dial to close Spear', 'Watch Wolfenstein load and the room objects illuminate'] : ['Acknowledge this message', 'Use either CRT dial to close the game', 'Watch the console reveal the Spear sequence'];
+		$('unlockSequence').replaceChildren.apply($('unlockSequence'), steps.map(function (step) { var item = document.createElement('li'); item.textContent = step; return item; }));
+		$('unlockNotice').showModal();
+	}
+	async function finishWolfRun(result) {
+		loadWolfScores();
+		var board = [];
+		try { var response = await fetch('/api/arcade/scores?game=' + result.game, { credentials: 'same-origin', cache: 'no-store' }); if (response.ok) board = (await response.json()).board || []; } catch (e) {}
+		var qualifies = result.score >= 0 && (board.length < 10 || result.score > board[board.length - 1].score);
+		if (qualifies) {
+			pendingScore = result; $('wolfScoreMessage').textContent = scoreName(result.game) + ' · ' + result.score + ' points · ' + (result.assisted ? 'ASSISTED' : 'UNASSISTED');
+			$('wolfScoreInitials').value = ''; $('wolfScoreEntry').showModal(); $('wolfScoreInitials').focus();
+		} else finishScoreFlow(result);
+	}
+	async function submitWolfScore(event) {
+		event.preventDefault(); if (!pendingScore) return;
+		var initials = String($('wolfScoreInitials').value || '').trim().toUpperCase();
+		if (!/^[A-Z]{3}$/.test(initials)) { $('wolfScoreInitials').setCustomValidity('Enter exactly three letters'); $('wolfScoreInitials').reportValidity(); return; }
+		$('wolfScoreInitials').setCustomValidity(''); var result = pendingScore;
+		try {
+			var response = await fetch('/api/arcade/scores', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: result.game, initials: initials, score: result.score, assisted: result.assisted, completed: result.completed, difficulty: result.difficulty, runId: result.runId }) });
+			if (!response.ok) throw new Error('score'); pendingScore = null; $('wolfScoreEntry').close(); loadWolfScores(); finishScoreFlow(result);
+		} catch (e) { $('wolfScoreMessage').textContent = 'Score could not be saved · try again'; }
+	}
+	function skipWolfScore() { var result = pendingScore; pendingScore = null; $('wolfScoreEntry').close(); finishScoreFlow(result); }
+	$('wolfScoreForm').addEventListener('submit', submitWolfScore);
+	$('wolfScoreSkip').addEventListener('click', skipWolfScore);
+	$('wolfScoreEntry').addEventListener('cancel', function (event) { event.preventDefault(); skipWolfScore(); });
+	$('unlockClose').addEventListener('click', function () { $('unlockNotice').close(); notifyScoreFinished(); });
+
+	// Out of lives: preserve the final score before clearing the run.
+	game.onGameOver = function (result) {
+		document.body.classList.remove('secret-menu-open', 'scoreboard-only'); $('menu').classList.add('hidden'); $('hud').classList.add('hidden');
 		if (game.minimap) game.minimap.style.display = 'none';
-		var score = game.gs.score, where = game._floorLabel();
-		game.clearRun();
-		refreshSaves();
-		say('Game over on ' + where + ' — final score ' + score + '. Start a new game or load a save.');
+		var where = game._floorLabel(); game.clearRun(); refreshSaves();
+		say('Game over on ' + where + ' — final score ' + result.score + ' · ' + (result.assisted ? 'assisted' : 'unassisted') + '.');
+		finishWolfRun(result);
+	};
+	game.onCampaignComplete = function (result) {
+		document.body.classList.remove('secret-menu-open', 'scoreboard-only'); $('menu').classList.add('hidden'); $('hud').classList.add('hidden');
+		if (game.minimap) game.minimap.style.display = 'none'; refreshSaves();
+		var reward = result.variant === 'SOD' ? 'MENU' : 'SOD';
+		try { window.localStorage.setItem('zipkin.arcade.wolfReward.v1', reward); } catch (e) {}
+		if (window.parent !== window) window.parent.postMessage({ type: 'uwolf-reward-earned', target: reward }, '*');
+		say(scoreName(result.game) + ' complete — final score ' + result.score + ' · ' + (result.assisted ? 'assisted' : 'unassisted') + '.');
+		finishWolfRun(result);
 	};
 
 	// Formatted explicitly rather than via toLocaleString(): the latter would follow
