@@ -1,66 +1,185 @@
 # Scene Access Gateway — Wolf3D extension
 
-Optional Wolfenstein 3D and Spear of Destiny browser-runtime integration for
-[Scene Access Gateway](../scene-access-gateway).
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
+[![Extension: Scene Access Gateway](https://img.shields.io/badge/extension-Scene%20Access%20Gateway-c084fc.svg)](https://github.com/zipkindev/scene-access-gateway)
+[![Game data: user supplied](https://img.shields.io/badge/game%20data-user%20supplied-64748b.svg)](#game-data-boundary)
 
-This repository contains the adapted browser engine, CRT controller, mobile
-controls, data verification manifest, and installation tooling. It does **not**
-contain commercial Wolfenstein 3D or Spear of Destiny game data.
+An optional browser-runtime extension that brings Wolfenstein 3D and Spear of
+Destiny into the interactive CRT presentation of
+[Scene Access Gateway](https://github.com/zipkindev/scene-access-gateway).
+
+This repository contains the adapted GPL browser engine, portal controller,
+responsive controls, verification manifests, and import tooling. It does
+**not** distribute commercial Wolfenstein 3D or Spear of Destiny game data.
+
+## What the extension adds
+
+- Wolfenstein 3D and Spear of Destiny runtime profiles selected from the
+  portal's in-scene game carousel.
+- A CRT boot, power-down, and game-switching presentation integrated with the
+  authored scene rather than presented as a separate application.
+- Keyboard, mouse, touch, mobile HUD, save, map, and weapon-selection support.
+- Embedded scene controls plus a responsive wide/fullscreen mobile mode.
+- Scene-aware zoom and pinch behavior that coordinates the game viewport with
+  the outer portal camera.
+- Exact recognition of supported user-owned datasets by filename, byte length,
+  and SHA-256 before installation.
+- A read-only Compose mount contract that leaves the main portal independently
+  buildable and deployable.
+
+## Relationship to the main project
+
+```mermaid
+flowchart LR
+    Browser[Visitor browser] --> Gateway[Scene Access Gateway]
+    Gateway --> Controller[CRT integration controller]
+    Controller --> Runtime[uWolf-derived browser runtime]
+    OwnedData[(Verified local game data)] -. local read-only files .-> Runtime
+
+    MainRepo[scene-access-gateway] -. Compose base .-> Gateway
+    ExtensionRepo[scene-access-gateway-wolf3d] -. extension overlay .-> Controller
+    ExtensionRepo -. runtime source .-> Runtime
+```
+
+The extension does not replace or fork the main application. Its Compose file
+adds two read-only mounts to the existing backend: the browser runtime and the
+CRT controller. If the overlay is omitted, Scene Access Gateway continues to
+run normally and its game routes remain unavailable.
 
 ## Requirements
 
-- Node.js 22 or newer for validation and data import;
-- a local checkout of `scene-access-gateway`;
-- legally obtained, supported Wolfenstein 3D and/or Spear of Destiny data files.
+- Git
+- Node.js 22 or newer for validation and data import
+- Docker Engine and Docker Compose v2 to run the combined stack
+- A local checkout of `scene-access-gateway`
+- Legally obtained, supported Wolfenstein 3D and/or Spear of Destiny data
 
-## Import game data
+## Quick start
 
-The importer accepts a directory containing the original data files. It
-matches filenames case-insensitively and copies only files whose byte length
-and SHA-256 match `manifests/supported-data.json`.
+Clone both repositories beside one another:
+
+```sh
+git clone https://github.com/zipkindev/scene-access-gateway.git
+git clone https://github.com/zipkindev/scene-access-gateway-wolf3d.git
+```
+
+Validate the extension source:
+
+```sh
+cd scene-access-gateway-wolf3d
+./scripts/test.sh
+```
+
+Import one or both supported datasets from a directory containing your legally
+obtained game files:
 
 ```sh
 ./scripts/import-game-data.sh /path/to/owned/game/files WL6
 ./scripts/import-game-data.sh /path/to/owned/game/files SOD
-./scripts/verify-game-data.sh
+./scripts/verify-game-data.sh ALL
 ```
 
-Use `ALL` instead of `WL6` or `SOD` to import both supported datasets. Imported
-files live directly under `runtime/`, are ignored by Git, and must never be
-committed or redistributed.
+The importer matches filenames case-insensitively, validates the complete
+selected dataset before copying anything, and accepts only the byte lengths
+and SHA-256 values recorded in `manifests/supported-data.json`. Existing files
+are retained only when they pass the same validation.
 
-## Use with Scene Access Gateway
-
-Set the absolute path to this checkout, then merge the extension definition:
+Start the combined stack from the main repository:
 
 ```sh
-export SAG_WOLF3D_EXTENSION_DIR=/absolute/path/to/scene-access-gateway-wolf3d
+export SAG_WOLF3D_EXTENSION_DIR="$(pwd)"
+cd ../scene-access-gateway
+
 docker compose \
-  -f /path/to/scene-access-gateway/compose.yaml \
-  -f compose.extension.yaml \
-  up -d
+  -f compose.yaml \
+  -f "$SAG_WOLF3D_EXTENSION_DIR/compose.extension.yaml" \
+  up -d --build
 ```
 
-The extension mounts the runtime and CRT controller read-only into the backend.
-The main repository remains buildable and runnable when this extension is not
-installed.
+## Supported data profiles
 
-## Source and rights boundary
+| Profile | Content | Expected files |
+| --- | --- | --- |
+| `WL6` | Wolfenstein 3D | `AUDIOHED`, `AUDIOT`, `GAMEMAPS`, `MAPHEAD`, `VGADICT`, `VGAGRAPH`, `VGAHEAD`, and `VSWAP` with `.WL6` extensions |
+| `SOD` | Spear of Destiny | The corresponding eight files with `.SOD` extensions |
+| `ALL` | Both profiles | Every file from both profiles |
 
-The browser runtime was adapted from
-[`dibdot/uWolf`](https://github.com/dibdot/uWolf), an original browser
-raycaster released under GPL-3.0. The local runtime was audited against
-upstream commit `80571bbde9897881ca2d9ecaf30e81cb308f37bb`: nine of its twelve
-JavaScript modules, both favicons, and the GPL license remain byte-identical;
-the other runtime files contain the Scene Access Gateway adaptations.
+The manifest identifies exact supported data, not merely compatible-looking
+filenames. Different releases or modified datasets are rejected rather than
+silently loaded.
 
-This repository is distributed under GPL-3.0. See [`LICENSE`](LICENSE),
-[`NOTICE.md`](NOTICE.md), and [`SOURCES.md`](SOURCES.md) for the license,
-authorship, modification, and source record. The upstream project excludes
-Wolfenstein/Spear game content and so do we.
+## Game-data boundary
 
-See [`SOURCES.md`](SOURCES.md) and [`docs/PUBLISHING-REVIEW.md`](docs/PUBLISHING-REVIEW.md)
-before making this repository public. Wolfenstein 3D, Spear of Destiny, id
-Software, Bethesda, ZeniMax, Microsoft, and related marks and game content
-belong to their respective owners. This project is not affiliated with or
-endorsed by them.
+Imported `.WL*`, `.SOD`, and `.SD*` files are placed under `runtime/` and
+ignored by Git. They must not be committed, uploaded as release assets, or
+redistributed with this project. The test suite fails if a matching game-data
+file becomes tracked.
+
+The source repository therefore remains useful without proprietary content:
+it provides the runtime modifications, integration logic, exact compatibility
+manifest, and safe import path; each user supplies data they are authorized to
+use.
+
+## Source provenance
+
+The browser runtime is based on
+[`dibdot/uWolf`](https://github.com/dibdot/uWolf), a dependency-free JavaScript
+raycaster distributed under GPL-3.0. This repository was audited against
+upstream commit `80571bbde9897881ca2d9ecaf30e81cb308f37bb`:
+
+- nine of twelve JavaScript modules, both favicons, and the runtime GPL license
+  remain byte-identical to that upstream revision;
+- the remaining runtime files contain the portal, Spear, mobile, save,
+  viewport, and presentation adaptations maintained here;
+- `integration/future-wolf3d-crt.js` is the Scene Access Gateway controller and
+  is released under GPL-3.0 with the rest of this repository.
+
+See [SOURCES.md](SOURCES.md) for the file-level source record and
+[NOTICE.md](NOTICE.md) for authorship and modification notices.
+
+## Validation
+
+```sh
+./scripts/test.sh
+```
+
+The validation checks JavaScript and shell syntax, parses the supported-data
+manifest, confirms the root and runtime GPL license files are byte-identical,
+rejects obsolete attribution, and verifies that no commercial game dataset is
+tracked.
+
+After importing data, run:
+
+```sh
+./scripts/verify-game-data.sh WL6
+./scripts/verify-game-data.sh SOD
+```
+
+## Repository layout
+
+| Path | Responsibility |
+| --- | --- |
+| `runtime/` | uWolf-derived browser engine and ignored local game-data target |
+| `integration/` | Scene/CRT controller loaded by the main portal |
+| `manifests/` | Exact identities for supported user-supplied datasets |
+| `scripts/` | Safe import, verification, and source-boundary tests |
+| `compose.extension.yaml` | Read-only extension mounts for the main stack |
+| `docs/` | Architecture and publication review records |
+
+## Publishing status
+
+Provenance, GPL inheritance, modified files, trademark boundaries, and
+commercial-data exclusions are recorded in
+[the publishing review](docs/PUBLISHING-REVIEW.md). A clean clone should
+contain the engine and tooling but none of the locally imported game files.
+
+## License and trademarks
+
+The repository source is distributed under the
+[GNU General Public License version 3](LICENSE). The GPL applies to the source
+code in this repository; it does not grant rights to Wolfenstein 3D or Spear
+of Destiny game data, artwork, audio, characters, or trademarks.
+
+Wolfenstein 3D, Spear of Destiny, id Software, Bethesda, ZeniMax, Microsoft,
+and related names and content belong to their respective owners. This project
+is not affiliated with or endorsed by them.
