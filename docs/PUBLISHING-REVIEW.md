@@ -12,7 +12,8 @@ The source and license boundary has been reviewed for public publication:
   GPL-3.0 with the repository.
 - [x] Commercial `.WL*`, `.SOD`, and `.SD*` data is excluded by Git rules and
   checked by `scripts/test.sh`.
-- [ ] Run clean-checkout acceptance after the public remote is created.
+- [x] Clean, credential-free checkout acceptance passed after the public
+  remote was created.
 
 The GPL covers the source code, not Wolfenstein 3D or Spear of Destiny game
 data, artwork, audio, trademarks, or other proprietary content. Users must
