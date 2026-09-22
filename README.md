@@ -1,5 +1,6 @@
 # Scene Access Gateway — Wolf3D extension
 
+[![CI](https://github.com/zipkindev/scene-access-gateway-wolf3d/actions/workflows/ci.yml/badge.svg)](https://github.com/zipkindev/scene-access-gateway-wolf3d/actions/workflows/ci.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![Extension: Scene Access Gateway](https://img.shields.io/badge/extension-Scene%20Access%20Gateway-c084fc.svg)](https://github.com/zipkindev/scene-access-gateway)
 [![Game data: user supplied](https://img.shields.io/badge/game%20data-user%20supplied-64748b.svg)](#game-data-boundary)
@@ -154,6 +155,14 @@ After importing data, run:
 ./scripts/verify-game-data.sh WL6
 ./scripts/verify-game-data.sh SOD
 ```
+
+## Maintaining your local checkout
+
+Imported game data stays ignored while source fixes follow an ordinary
+feature-branch and pull-request workflow. See
+[Local development and Git synchronization](docs/LOCAL-DEVELOPMENT.md), or
+run `./scripts/sync-branch.sh` after committing a clean feature branch to
+rebase it onto current `main`, retest it, and push it safely.
 
 ## Repository layout
 
