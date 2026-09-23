@@ -4,6 +4,7 @@
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![Extension: Scene Access Gateway](https://img.shields.io/badge/extension-Scene%20Access%20Gateway-c084fc.svg)](https://github.com/zipkindev/scene-access-gateway)
 [![Game data: user supplied](https://img.shields.io/badge/game%20data-user%20supplied-64748b.svg)](#game-data-boundary)
+[![Platform](https://img.shields.io/badge/platform-Scene%20Access%20Platform-0f766e.svg)](https://github.com/zipkindev/scene-access-platform)
 
 An optional browser-runtime extension that brings Wolfenstein 3D and Spear of
 Destiny into the interactive CRT presentation of
@@ -12,6 +13,12 @@ Destiny into the interactive CRT presentation of
 This repository contains the adapted GPL browser engine, portal controller,
 responsive controls, verification manifests, and import tooling. It does
 **not** distribute commercial Wolfenstein 3D or Spear of Destiny game data.
+
+Most users should obtain this extension through
+[Scene Access Platform](https://github.com/zipkindev/scene-access-platform),
+which pins a tested Gateway and extension pair. This repository remains the
+correct place to develop and review the GPL runtime, controller, data importer,
+and extension-specific tests.
 
 ## What the extension adds
 
@@ -35,13 +42,15 @@ responsive controls, verification manifests, and import tooling. It does
 
 ```mermaid
 flowchart LR
+    Platform[Scene Access Platform] -->|pins tested commit| MainRepo[scene-access-gateway]
+    Platform -->|pins tested commit| ExtensionRepo[scene-access-gateway-wolf3d]
     Browser[Visitor browser] --> Gateway[Scene Access Gateway]
     Gateway --> Controller[CRT integration controller]
     Controller --> Runtime[uWolf-derived browser runtime]
     OwnedData[(Verified local game data)] -. local read-only files .-> Runtime
 
-    MainRepo[scene-access-gateway] -. Compose base .-> Gateway
-    ExtensionRepo[scene-access-gateway-wolf3d] -. extension overlay .-> Controller
+    MainRepo -. Compose base .-> Gateway
+    ExtensionRepo -. extension overlay .-> Controller
     ExtensionRepo -. runtime source .-> Runtime
 ```
 
@@ -55,32 +64,32 @@ run normally and its game routes remain unavailable.
 - Git
 - Node.js 22 or newer for validation and data import
 - Docker Engine and Docker Compose v2 to run the combined stack
-- A local checkout of `scene-access-gateway`
+- A Platform workspace or local checkout of `scene-access-gateway`
 - Legally obtained, supported Wolfenstein 3D and/or Spear of Destiny data
 
 ## Quick start
 
-Clone both repositories beside one another:
+Clone the supported Platform workspace:
 
 ```sh
-git clone https://github.com/zipkindev/scene-access-gateway.git
-git clone https://github.com/zipkindev/scene-access-gateway-wolf3d.git
+git clone --recurse-submodules https://github.com/zipkindev/scene-access-platform.git
+cd scene-access-platform
+./scripts/test.sh
 ```
 
-Validate the extension source:
+Validate only the extension source when working inside its submodule:
 
 ```sh
-cd scene-access-gateway-wolf3d
-./scripts/test.sh
+./wolf3d/scripts/test.sh
 ```
 
 Import one or both supported datasets from a directory containing your legally
 obtained game files:
 
 ```sh
-./scripts/import-game-data.sh /path/to/owned/game/files WL6
-./scripts/import-game-data.sh /path/to/owned/game/files SOD
-./scripts/verify-game-data.sh ALL
+./wolf3d/scripts/import-game-data.sh /path/to/owned/game/files WL6
+./wolf3d/scripts/import-game-data.sh /path/to/owned/game/files SOD
+./wolf3d/scripts/verify-game-data.sh ALL
 ```
 
 The importer matches filenames case-insensitively, validates the complete
@@ -88,17 +97,14 @@ selected dataset before copying anything, and accepts only the byte lengths
 and SHA-256 values recorded in `manifests/supported-data.json`. Existing files
 are retained only when they pass the same validation.
 
-Start the combined stack from the main repository:
+Start the combined stack from the Platform root:
 
 ```sh
-export SAG_WOLF3D_EXTENSION_DIR="$(pwd)"
-cd ../scene-access-gateway
-
-docker compose \
-  -f compose.yaml \
-  -f "$SAG_WOLF3D_EXTENSION_DIR/compose.extension.yaml" \
-  up -d --build
+./scripts/up.sh
 ```
+
+Standalone component contributors can still run
+`./scripts/smoke-combined.sh /path/to/scene-access-gateway` from this repository.
 
 ## Supported data profiles
 
