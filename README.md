@@ -59,6 +59,13 @@ adds two read-only mounts to the existing backend: the browser runtime and the
 CRT controller. If the overlay is omitted, Scene Access Gateway continues to
 run normally and its game routes remain unavailable.
 
+The platform's protected-application onboarding contract does not turn this
+extension into a separately proxied application. Wolf/Spear assets stay behind
+the existing portal origin and session boundary, and the extension adds no CSP
+origin, WAF exclusion, Authentik relay, public hostname, or independent QR
+destination. Future changes that introduce any of those behaviors must first
+add a reviewed Gateway application contract and corresponding platform journey.
+
 ## Requirements
 
 - Git
